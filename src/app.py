@@ -7,10 +7,12 @@ with st.sidebar:
     st.header('Settings')
     website_url = st.text_input('Website URL')
 
-st.chat_input('Type a message')
+user_query = st.chat_input('Type a message')
 
-with st.chat_message('AI'):
-    st.write('Hello, I am an AI!')
+if user_query is not None and user_query != '':
 
-with st.chat_message('Human'):
-    st.write('Hello, I am a human! I want to know more about Langchain!')
+    with st.chat_message('Human'):
+        st.write(user_query)
+
+    with st.chat_message('AI'):
+        st.write('I don\'t know.')
