@@ -13,10 +13,6 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 load_dotenv()
 
 
-def get_response(user_input):
-    return "I don't know."
-
-
 def get_vectorstore_from_url(url):
     # Content in document format
     loader = WebBaseLoader(url)
@@ -63,6 +59,18 @@ def get_conversational_rag_chain(retriever_chain):
     return create_retrieval_chain(retriever_chain, stuff_documents_chain)
 
 
+def get_response(user_input):
+    retriever_chain = get_context_retriever_chain(st.session_state.vectorstore)
+    conversation_rag_chain = get_conversational_rag_chain(retriever_chain)
+
+    response = conversation_rag_chain.invoke({
+        "chat_history": st.session_state.chat_history,
+        "input": user_query,
+    })
+
+    return response['answer']
+
+
 # App configuration
 st.set_page_config(page_title='Chat with Websites', page_icon='🤖')
 st.title('Chat with Websites')
@@ -85,23 +93,12 @@ else:
     if "vectorstore" not in st.session_state:
         st.session_state.vectorstore = get_vectorstore_from_url(website_url)
 
-    # Create conversation chain
-    retriever_chain = get_context_retriever_chain(st.session_state.vectorstore)
-
-    conversation_rag_chain = get_conversational_rag_chain(retriever_chain)
-
     # User input
     user_query = st.chat_input('Type your message here...')
     if user_query is not None and user_query != '':
-        # response = get_response(user_query)
-        response = conversation_rag_chain.invoke({
-            "chat_history": st.session_state.chat_history,
-            "input": user_query,
-        })
-
-        st.write(response)
-        # st.session_state.chat_history.append(HumanMessage(content=user_query))
-        # st.session_state.chat_history.append(AIMessage(content=response))
+        response = get_response(user_query)
+        st.session_state.chat_history.append(HumanMessage(content=user_query))
+        st.session_state.chat_history.append(AIMessage(content=response))
 
     # Conversation
     for message in st.session_state.chat_history:
